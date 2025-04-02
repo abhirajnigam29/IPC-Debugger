@@ -1,0 +1,4 @@
+        self.info_label = tk.Label(master, text="IPC Messages:")
+        self.info_label.pack()
+        self.message_box = scrolledtext.ScrolledText(master, width=60, height=15)
+        self.message_box.pack()
