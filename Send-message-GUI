@@ -1,0 +1,6 @@
+        self.msg_label = tk.Label(master, text="Send Message:")
+        self.msg_label.pack()
+        self.msg_entry = tk.Entry(master, width=50)
+        self.msg_entry.pack()
+        self.send_button = tk.Button(master, text="Send", command=self.send_message, state=tk.DISABLED)
+        self.send_button.pack()
