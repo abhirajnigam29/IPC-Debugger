@@ -1,0 +1,8 @@
+        for pipe in self.pipes:
+            if pipe.poll():
+                message = pipe.recv()
+                self.message_box.insert(tk.END, f"{message}\n")
+
+        # Keep checking every second
+        if self.processes:
+            self.master.after(1000, self.check_ipc_messages)
