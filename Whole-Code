@@ -1,0 +1,117 @@
+import tkinter as tk
+from tkinter import scrolledtext
+import multiprocessing
+import os
+import time
+
+# Worker process function for IPC
+def ipc_worker(pipe, proc_id):
+    try:
+        while True:
+            if pipe.poll():  # Check if there's a message from the main process
+                received = pipe.recv()
+                response = f"Process {proc_id} Echo: {received}"
+                pipe.send(response)  # Send response back
+
+            # Simulate some background activity
+            message = f"Process {proc_id} - Random Data: " + os.urandom(5).hex()
+            pipe.send(message)
+            time.sleep(2)
+    except KeyboardInterrupt:
+        pass
+
+class IPCDebuggerGUI:
+    def __init__(self, master):
+        self.master = master
+        master.title("IPC Debugger")
+
+        # Message Log
+        self.info_label = tk.Label(master, text="IPC Messages:")
+        self.info_label.pack()
+        self.message_box = scrolledtext.ScrolledText(master, width=60, height=15)
+        self.message_box.pack()
+
+        # Start/Stop Buttons
+        self.start_button = tk.Button(master, text="Start IPC Process", command=self.start_ipc)
+        self.start_button.pack()
+        self.stop_button = tk.Button(master, text="Stop All Processes", command=self.stop_ipc, state=tk.DISABLED)
+        self.stop_button.pack()
+
+        # Send Message Entry
+        self.msg_label = tk.Label(master, text="Send Message:")
+        self.msg_label.pack()
+        self.msg_entry = tk.Entry(master, width=50)
+        self.msg_entry.pack()
+        self.send_button = tk.Button(master, text="Send", command=self.send_message, state=tk.DISABLED)
+        self.send_button.pack()
+
+        # Clear Log Button
+        self.clear_button = tk.Button(master, text="Clear Messages", command=self.clear_messages)
+        self.clear_button.pack()
+
+        # Store running processes
+        self.processes = []
+        self.pipes = []
+
+    def start_ipc(self):
+        # Create a new IPC process
+        recv_pipe, send_pipe = multiprocessing.Pipe()
+        proc_id = len(self.processes) + 1
+        process = multiprocessing.Process(target=ipc_worker, args=(send_pipe, proc_id))
+        process.start()
+
+        # Store the process and pipe
+        self.processes.append(process)
+        self.pipes.append(recv_pipe)
+
+        # Update GUI
+        self.start_button.config(state=tk.NORMAL)
+        self.stop_button.config(state=tk.NORMAL)
+        self.send_button.config(state=tk.NORMAL)
+        self.message_box.insert(tk.END, f"Started IPC Process {proc_id} (PID: {process.pid})\n")
+
+        # Start polling messages
+        self.master.after(1000, self.check_ipc_messages)
+
+    def stop_ipc(self):
+        for process in self.processes:
+            if process.is_alive():
+                process.terminate()
+                process.join()
+
+        # Clear stored processes & pipes
+        self.processes.clear()
+        self.pipes.clear()
+
+        # Update GUI
+        self.message_box.insert(tk.END, "All IPC Processes Stopped.\n")
+        self.stop_button.config(state=tk.DISABLED)
+        self.send_button.config(state=tk.DISABLED)
+
+    def send_message(self):
+        msg = self.msg_entry.get()
+        if msg:
+            for pipe in self.pipes:
+                if pipe:  # Send message to all worker processes
+                    pipe.send(msg)
+            self.message_box.insert(tk.END, f"Sent: {msg}\n")
+            self.msg_entry.delete(0, tk.END)  # Clear entry after sending
+
+    def check_ipc_messages(self):
+        for pipe in self.pipes:
+            if pipe.poll():
+                message = pipe.recv()
+                self.message_box.insert(tk.END, f"{message}\n")
+
+        # Keep checking every second
+        if self.processes:
+            self.master.after(1000, self.check_ipc_messages)
+
+    def clear_messages(self):
+        self.message_box.delete("1.0", tk.END)
+
+if __name__ == "__main__":
+    multiprocessing.freeze_support()
+    root = tk.Tk()
+    app = IPCDebuggerGUI(root)
+    root.mainloop()
