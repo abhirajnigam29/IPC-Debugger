@@ -1,0 +1,17 @@
+        recv_pipe, send_pipe = multiprocessing.Pipe()
+        proc_id = len(self.processes) + 1
+        process = multiprocessing.Process(target=ipc_worker, args=(send_pipe, proc_id))
+        process.start()
+
+        # Store the process and pipe
+        self.processes.append(process)
+        self.pipes.append(recv_pipe)
+
+        # Update GUI
+        self.start_button.config(state=tk.NORMAL)
+        self.stop_button.config(state=tk.NORMAL)
+        self.send_button.config(state=tk.NORMAL)
+        self.message_box.insert(tk.END, f"Started IPC Process {proc_id} (PID: {process.pid})\n")
+
+        # Start polling messages
+        self.master.after(1000, self.check_ipc_messages)
