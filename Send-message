@@ -1,0 +1,7 @@
+        msg = self.msg_entry.get()
+        if msg:
+            for pipe in self.pipes:
+                if pipe:  # Send message to all worker processes
+                    pipe.send(msg)
+            self.message_box.insert(tk.END, f"Sent: {msg}\n")
+            self.msg_entry.delete(0, tk.END)  # Clear entry after sending
