@@ -1,0 +1,7 @@
+        # Clear Log Button
+        self.clear_button = tk.Button(master, text="Clear Messages", command=self.clear_messages)
+        self.clear_button.pack()
+
+        # Store running processes
+        self.processes = []
+        self.pipes = []
