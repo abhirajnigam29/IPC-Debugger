@@ -1,0 +1,13 @@
+        for process in self.processes:
+            if process.is_alive():
+                process.terminate()
+                process.join()
+
+        # Clear stored processes & pipes
+        self.processes.clear()
+        self.pipes.clear()
+
+        # Update GUI
+        self.message_box.insert(tk.END, "All IPC Processes Stopped.\n")
+        self.stop_button.config(state=tk.DISABLED)
+        self.send_button.config(state=tk.DISABLED)
