@@ -1,0 +1,4 @@
+        self.start_button = tk.Button(master, text="Start IPC Process", command=self.start_ipc)
+        self.start_button.pack()
+        self.stop_button = tk.Button(master, text="Stop All Processes", command=self.stop_ipc, state=tk.DISABLED)
+        self.stop_button.pack()
